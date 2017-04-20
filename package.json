@@ -1,0 +1,34 @@
+{
+  "name": "publication-events",
+  "version": "0.1.0",
+  "description": "Publication Event Source Emitter",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha",
+    "start:example": "node -e \"require('./examples').testRun()\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.swmdigital.io/scm/bc/publication-events"
+  },
+  "author": "Carl Winkler",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.81.0",
+    "typescript": "2.3",
+    "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.5.1",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.13",
+    "@types/request": "^0.0.42",
+    "@types/uuid": "^2.0.29",
+    "chai": "^3.5.0",
+    "dotenv": "^4.0.0",
+    "mocha": "^3.2.0",
+    "publication-types": "1.2.1",
+    "swm-article-parser": "1.0.2",
+    "tslint": "^5.1.0"
+  }
+}

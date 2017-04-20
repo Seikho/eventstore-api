@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "sourceMap": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": "./",
+    "paths": {
+      "types": [
+        "src/types"
+      ],
+      "types/*": [
+        "src/types/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
