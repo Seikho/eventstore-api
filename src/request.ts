@@ -16,10 +16,22 @@ export default function requestToPromise<TBody>(uri: string, options: request.Co
       resolve({
         headers: res.headers,
         statusCode: res.statusCode,
-        body,
+        body: parseBody(body),
       })
     })
   })
 
   return promise
+}
+
+function parseBody(body: any): any {
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body)
+    } catch (_) {
+      return body
+    }
+  }
+
+  return body
 }

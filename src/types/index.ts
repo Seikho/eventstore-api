@@ -1,22 +1,7 @@
-import { Publication } from 'publication-types'
-
-type EventPublication =
-    | Publication.Video
-    | Publication.Article
-    | Publication.Video
-
-export type Event<TEvent extends string, TData extends object> = {
-    ingestSource: string
-    eventType: TEvent
+export type Event<TData> = {
+    eventType: string
     data: TData
 }
-
-export type EventType = ValidEvent['eventType']
-
-export type ValidEvent =
-    | PublicationPublished
-
-export type PublicationPublished = Event<'PublicationPublished', EventPublication>
 
 export type StreamResponse = {
     title: string
@@ -34,8 +19,29 @@ export type StreamResponse = {
 }
 
 export type StreamLink = {
-    url: string
-    relation: string
+    uri: string
+    relation: Relation
+}
+
+export type Relation =
+    | 'self'
+    | 'first'
+    | 'previous'
+    | 'next'
+    | 'metadata'
+    | 'last'
+    | 'edit'
+    | 'alternate'
+
+export type EventStream<TData> = {
+    self: () => Promise<StreamResponse | void>
+    next: () => Promise<StreamResponse | void>
+    previous: () => Promise<StreamResponse | void>
+    first: () => Promise<StreamResponse | void>
+    last: () => Promise<StreamResponse | void>
+    metadata: () => Promise<StreamResponse | void>
+    entries: () => Promise<StreamEventResponse<TData>[]>
+    publish: (events: Array<Event<TData>>) => Promise<void>
 }
 
 export type StreamEntry = {
@@ -49,13 +55,13 @@ export type StreamEntry = {
     links: StreamLink[]
 }
 
-export type StreamEventResponse<TEvent extends string, TData extends object> =
+export type StreamEventResponse<TData> =
     StreamEntry
     & {
         content: {
             eventStreamId: string
             eventNumber: number
-            eventType: TEvent
+            eventType: string
             data: TData
             metadata: string
         }

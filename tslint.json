@@ -50,7 +50,7 @@
             false
         ],
         "no-console": [
-            true,
+            false,
             "log",
             "warn",
             "error",

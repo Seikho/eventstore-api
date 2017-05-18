@@ -6,7 +6,7 @@ class Config {
 }
 
 /*
- * @param host Full base URL with protocol included. E.g. http://localhost:3141
+ * @param hostUrl Full base URL with protocol included. E.g. http://localhost:3141
  */
 export function setHostUrl(hostUrl: string): void {
   const lastChar = hostUrl.slice(-1)
