@@ -1,9 +1,12 @@
-import * as store from '../src'
+import { EventStore } from '../src'
 
 export async function testRun() {
-  const stream = await store.getStream('publications')
+  const store = new EventStore({
+    host: process.env.JOURNAL_URL,
+    stream: 'publications'
+  })
 
-  const entries = await stream.entries()
+  const entries = await store.entries()
   return entries
 }
 

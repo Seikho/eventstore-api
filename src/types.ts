@@ -66,3 +66,43 @@ export type StreamEventResponse<TData> =
             metadata: string
         }
     }
+
+export type AtomLink = {
+    uri: string
+    relation: string
+}
+
+export type AtomEntry<TEvent> = {
+    id: string
+    title: string
+    headOfStream: boolean
+    links: AtomLink[]
+
+    /** ISO string */
+    updated: string
+    author: {
+        name: string
+    }
+    summary: string
+    ack: () => Promise<void>
+    nack: () => Promise<void>
+    event: TEvent
+}
+
+export interface Atom<TEvent> {
+    id: string
+    title: string
+    links: AtomLink[]
+
+    /** ISO string */
+    updated: string
+    author: {
+        name: string
+    }
+    entries: AtomEntry<TEvent>[]
+
+    ackAll: () => Promise<void>
+    nackAll: () => Promise<void>
+    previous: () => Promise<Atom<TEvent>>
+    self: () => Promise<Atom<TEvent>>
+}

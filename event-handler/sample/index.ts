@@ -1,15 +1,22 @@
 import * as dotenv from 'dotenv'
 import * as path from 'path'
+import { EventStore } from '../../src'
 
 dotenv.config({
   path: path.resolve(__dirname, '..', '..', '.env')
 })
 
-import * as store from '../../src'
+type SampleEvent = SWMEvent<any> & { id: any }
 
 async function start() {
-  const subscription = new store.EventStore<SWMEvent<any> & { id: any }>('publications')
-  const start = await subscription.subscribe('publication-handlers')
+  const config = {
+    host: process.env.JOURNAL_URL,
+    stream: 'publications'
+  }
+
+  const store = new EventStore<SampleEvent>(config)
+  const start = await store.subscribe('publication-handlers')
+
   for (const e of start.entries) {
     console.log(e.event.id)
   }

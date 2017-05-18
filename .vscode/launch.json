@@ -17,6 +17,19 @@
     },
     {
       "type": "node",
+      "request": "launch",
+      "name": "Launch Migrate",
+      "program": "${workspaceRoot}/ingestor/migrate-db/index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "examples/**/*.ts",
+        "command-handler/**/*.t",
+        "ingestor/**/*.ts",
+        "src/**/*.ts"
+      ]
+    },
+    {
+      "type": "node",
       "request": "attach",
       "name": "Attach to Port",
       "address": "localhost",

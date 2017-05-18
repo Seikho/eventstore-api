@@ -1,6 +1,21 @@
-import * as store from '../src'
-import { Event } from 'types'
-const _stream = store.getStream<SWMEvent<any>>('publications')
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+import { EventStore } from '../src'
+import { Event } from '../src/types'
+
+dotenv.config({
+  path: path.resolve(__dirname, '..', '.env')
+})
+
+const store = new EventStore(
+  {
+    host: process.env.JOURNAL_URL,
+    stream: 'publications',
+    createStream: {
+      metaReadRole: '$all',
+      readRole: '$all'
+    }
+  })
 
 /**
  * In reality, this would be a Web API instead of an adjacent module
@@ -42,9 +57,9 @@ function toEvent(command: Command): Event<SWMEvent<any>> {
 }
 
 async function publish(events: Event<SWMEvent<any>>[]) {
-  const stream = await _stream
-
-
-
-  await stream.publish(events)
+  try {
+    await store.publish(events)
+  } catch (ex) {
+    console.log('[PUBLISH] Failed: %s', ex.message)
+  }
 }
