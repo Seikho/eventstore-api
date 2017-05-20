@@ -87,7 +87,7 @@ export type AtomEntry<TEvent> = {
     summary: string
 
     ack: () => Promise<void>
-    nack: () => Promise<void>
+    nack: (action: AtomNackAction) => Promise<void>
 }
 
 export interface Atom<TEvent> {
@@ -110,7 +110,7 @@ export interface Atom<TEvent> {
     entries: Array<AtomEntry<TEvent>>
 
     ackAll: () => Promise<void>
-    nackAll: () => Promise<void>
+    nackAll: (action: AtomNackAction) => Promise<void>
     previous: (options?: AtomOptions) => Promise<Atom<TEvent>>
     self: (options?: AtomOptions) => Promise<Atom<TEvent>>
 }
@@ -121,4 +121,4 @@ export type AtomOptions = {
 
 export type AtomEmbed = 'None' | 'Content' | 'Rich' | 'Body' | 'PrettyBody' | 'TryHarder'
 
-export type AtomNack = 'Park' | 'Retry' | 'Skip' | 'Stop'
+export type AtomNackAction = 'Park' | 'Retry' | 'Skip' | 'Stop'

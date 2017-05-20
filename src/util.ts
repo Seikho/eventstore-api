@@ -4,7 +4,8 @@ import {
   Event,
   Atom,
   AtomLink,
-  AtomOptions
+  AtomOptions,
+  AtomNackAction
 } from './types'
 import * as uuid from 'uuid'
 
@@ -110,7 +111,7 @@ function toMsgAck(rel: string, links: AtomLink[]) {
     return () => Promise.reject('No relation found in originating Atom')
   }
 
-  return async (action?: string) => {
+  return async (action?: AtomNackAction) => {
     const ackUri = action ?
       `${relLink.uri}?action=${action}`
       : relLink.uri
