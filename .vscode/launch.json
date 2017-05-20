@@ -7,8 +7,19 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Example",
+      "name": "Launch Handler",
       "program": "${workspaceRoot}/event-handler/sample/index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "examples/**/*.ts",
+        "src/**/*.ts"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Example",
+      "program": "${workspaceRoot}/examples/index.js",
       "sourceMaps": true,
       "outFiles": [
         "examples/**/*.ts",
