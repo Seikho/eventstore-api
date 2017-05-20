@@ -1,24 +1,22 @@
 import * as uuid from 'uuid'
 import request from './request'
 import {
+  AtomOptions,
   StreamLink,
-  StreamResponse,
-  StreamEventResponse,
+  EventStream,
   Relation,
-  Event
+  Event,
+  StreamEntry
 } from './types'
 
 import {
   getStreamResponse,
   normaliseUrl,
-  getStreamEntry,
-  sortEntries,
   writeToStream,
   getAtom
 } from './util'
 
-type StreamRequester = () => Promise<StreamResponse | void>
-type StreamEntryRequester<TData> = () => Promise<Array<StreamEventResponse<TData>>>
+type StreamRequester<TEvent> = () => Promise<EventStream<TEvent>>
 
 type CreateOptions = {
   readRole: string
@@ -26,8 +24,8 @@ type CreateOptions = {
 }
 
 type Credentials = {
-  username: string
-  password: string
+  user?: string
+  pass?: string
 }
 
 type ConstructorOptions = {
@@ -37,35 +35,43 @@ type ConstructorOptions = {
   credentials?: Credentials
 }
 
+type SubscribeOptions = {
+  bufferSize?: number
+  checkPointAfterMilliseconds?: number
+  extraStatistics?: boolean
+  liveBufferSize?: number
+  maxCheckPointCount?: number
+  maxRetryCount?: number
+  maxSubscriberCount?: number
+  messageTimeoutMilliseconds?: number
+  minCheckPointCount?: number
+  namedConsumeStrategy?: 'RoundRobin' | 'Pinned' | 'DispatchToSingle'
+  readBatchSize?: number
+  resolveLinktos?: boolean
+  startFrom?: number
+}
+
 export class EventStore<TData> {
   private stream: string
   private host: string
   private initialised = false
-  private credentials = {
-    username: '',
-    password: ''
-  }
+  private credentials: Credentials = {}
 
-  self: StreamRequester = () => Promise.resolve()
-  next: StreamRequester = () => Promise.resolve()
-  previous: StreamRequester = () => Promise.resolve()
-  first: StreamRequester = () => Promise.resolve()
-  last: StreamRequester = () => Promise.resolve()
-  entries: StreamEntryRequester<TData> = () => Promise.resolve([])
+  self: StreamRequester<TData>= () => Promise.reject('Store not yet initialised')
+  next: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
+  previous: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
+  first: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
+  last: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
+  entries: Array<StreamEntry<TData>> = []
 
   constructor(options: ConstructorOptions) {
     this.host = normaliseUrl(options.host)
     this.stream = options.stream
-
-    if (options.credentials) {
-      this.credentials = options.credentials
-    }
-
-    this.init(options.createStream)
+    this.credentials = options.credentials || {}
   }
 
   // Every public request must be prefaced with thi
-  private async init(options?: CreateOptions) {
+  async init(options?: CreateOptions) {
     if (this.initialised) {
       return
     }
@@ -75,9 +81,11 @@ export class EventStore<TData> {
     }
 
     const url = `${this.host}streams/${this.stream}`
-    const response = await getStreamResponse(url)
+    const response = await getStreamResponse<TData>(url)
+    this.entries = response.entries
     this.updateRelations(response.links)
     this.initialised = true
+    return response
   }
 
   private async createStream(options: CreateOptions) {
@@ -103,11 +111,33 @@ export class EventStore<TData> {
     return response
   }
 
-  subscribe = async (group: string) => {
+  subscribe = async (group: string, options: AtomOptions = {}) => {
     await this.init()
     const url = `${this.host}subscriptions/${this.stream}/${group}`
-    const response = await getAtom<TData>(url)
+    const response = await getAtom<TData>(url, options)
     return response
+  }
+
+  createSubscription = async (group: string, options: SubscribeOptions = {}) => {
+    await this.init()
+    const url = `${this.host}subscriptions/${this.stream}/${group}`
+    const requestOptions = {
+      method: 'PUT',
+      body: JSON.stringify({ ...defaultSubscriberOptions, ...options }),
+      auth: this.credentials,
+      headers: { 'Content-Type': 'application/json' }
+    }
+
+    if (!this.credentials.user || !this.credentials.pass) {
+      delete requestOptions.auth
+    }
+
+    const response = await request<void>(url, requestOptions)
+    if (response.statusCode === 201) {
+      return true
+    }
+
+    throw new Error(`Failed to create subscription -- Status code: ${response.statusCode}`)
   }
 
   publish = async (events: Array<Event<TData>>) => {
@@ -149,7 +179,7 @@ export class EventStore<TData> {
   private toRelation = (relation: Relation, links: StreamLink[] = []) => {
     const relLink = links.find(link => link.relation === relation)
     if (!relLink) {
-      return () => Promise.resolve()
+      return () => Promise.reject(`Stream has no relation '${relation}'`)
     }
 
     /**
@@ -157,9 +187,14 @@ export class EventStore<TData> {
      */
     return async () => {
       await this.init()
-      const response = await getStreamResponse(relLink.uri)
-      response.entries = sortEntries(response.entries)
-      this.entries = () => Promise.all(response.entries.map(getStreamEntry))
+      const response = await getStreamResponse<TData>(relLink.uri)
+      response.entries = response.entries.sort((left, right) => left.eventNumber - right.eventNumber)
+
+      for (const entry of response.entries) {
+        entry.event = JSON.parse(entry.data)
+      }
+
+      this.entries = response.entries
       this.updateRelations(response.links)
       return response
     }
@@ -178,6 +213,22 @@ export class EventStore<TData> {
     this.previous = toRel('previous')
     this.next = toRel('next')
   }
+}
+
+const defaultSubscriberOptions: SubscribeOptions = {
+  bufferSize: 500,
+  checkPointAfterMilliseconds: 1000,
+  extraStatistics: false,
+  liveBufferSize: 500,
+  maxCheckPointCount: 500,
+  maxRetryCount: 10,
+  maxSubscriberCount: 10,
+  messageTimeoutMilliseconds: 10000,
+  minCheckPointCount: 10,
+  namedConsumeStrategy: 'RoundRobin',
+  readBatchSize: 20,
+  resolveLinktos: false,
+  startFrom: 0
 }
 
 type StreamPosition =

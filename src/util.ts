@@ -1,11 +1,10 @@
 import request from './request'
 import {
-  StreamResponse,
-  StreamEventResponse,
-  StreamEntry,
+  EventStream,
   Event,
   Atom,
-  AtomLink
+  AtomLink,
+  AtomOptions
 } from './types'
 import * as uuid from 'uuid'
 
@@ -16,24 +15,20 @@ export function normaliseUrl(url: string) {
     : url + '/'
 }
 
-export async function getStreamEntry<TData>(entry: StreamEntry) {
-  const response = await request<StreamEventResponse<TData>>(entry.id, {
-    headers: {
-      'Accept': 'application/json'
-    }
-  })
-
-  return response.body
-}
-
-export async function getStreamResponse(uri: string): Promise<StreamResponse> {
-  const response = await request<StreamResponse>(uri, {
+export async function getStreamResponse<TEvent>(uri: string): Promise<EventStream<TEvent>> {
+  const response = await request<EventStream<TEvent>>(`${uri}?embed=TryHarder`, {
     headers: {
       'Accept': 'application/vnd.eventstore.atom+json'
     }
   })
 
-  return response.body
+  const stream = response.body
+
+  for (const entry of stream.entries) {
+    entry.event = JSON.parse(entry.data)
+  }
+
+  return stream
 }
 
 export function getStreamURL(host: string, stream: string): string {
@@ -67,33 +62,45 @@ export async function writeToStream<TData>(host: string, stream: string, events:
   }
 }
 
-export function sortEntries(entries: StreamEntry[]) {
-  return entries.sort((left, right) => {
+/**
+ * TODO: Fix passing/handling options to things that care
+ */
+export async function getAtom<TEvent>(url: string, options: AtomOptions = {}) {
+  const count = options.count ? `/${options.count}` : ''
+  const atomUrl = `${url}${count}?embed=TryHarder`
+  const response = await request<Atom<TEvent>>(atomUrl, jsonHeader)
 
-    const leftId = Number(left.title.split('@')[0])
-    const rightId = Number(right.title.split('@')[0])
-
-    return leftId - rightId
-  })
-}
-
-export async function getAtom<TEvent>(url: string) {
-  const response = await request<Atom<TEvent>>(url, jsonHeader)
+  if (response.statusCode >= 400) {
+    throw new Error(`Failed to retrieve subscription - Error Code: ${response.statusCode}`)
+  }
 
   const atom = response.body
 
+  const toAtom = (relation: string) => {
+    const link = atom.links.find(link => link.relation === relation)
+
+    if (!link) {
+      return () => Promise.reject('No relation found in originating Atom')
+    }
+
+    return async (options: AtomOptions = {}) => {
+      const atom = await getAtom(link.uri, options)
+      return atom
+    }
+  }
+
   atom.ackAll = toMsgAck('ackAll', atom.links)
   atom.nackAll = toMsgAck('nackAll', atom.links)
-  atom.previous = toMsgAck('previous', atom.links)
-  atom.self = toMsgAck('self', atom.links)
+  atom.previous = toAtom('previous')
+  atom.self = toAtom('self')
 
   for (const entry of atom.entries) {
     entry.ack = toMsgAck('ack', entry.links)
     entry.nack = toMsgAck('nack', entry.links)
-    const event = await request<TEvent>(entry.id)
-    entry.event = event.body
+    entry.event = JSON.parse(entry.data)
   }
 
+  atom.entries = atom.entries.sort((left, right) => left.eventNumber - right.eventNumber)
   return atom
 }
 
@@ -103,8 +110,17 @@ function toMsgAck(rel: string, links: AtomLink[]) {
     return () => Promise.reject('No relation found in originating Atom')
   }
 
-  return async () => {
-    const response = await request(relLink.uri, jsonHeader)
+  return async (action?: string) => {
+    const ackUri = action ?
+      `${relLink.uri}?action=${action}`
+      : relLink.uri
+
+    const response = await request(ackUri, {
+      headers: {
+        'Content-Type': 'applicaiton/json'
+      },
+      method: 'POST'
+    })
     return response.body
   }
 }

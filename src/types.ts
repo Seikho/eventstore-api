@@ -3,7 +3,7 @@ export type Event<TData> = {
     data: TData
 }
 
-export type StreamResponse = {
+export type EventStream<TEvent> = {
     title: string
     id: string
     updated: string
@@ -15,7 +15,7 @@ export type StreamResponse = {
     selfUrl: string
     eTag: string
     links: StreamLink[]
-    entries: StreamEntry[]
+    entries: StreamEntry<TEvent>[]
 }
 
 export type StreamLink = {
@@ -33,20 +33,19 @@ export type Relation =
     | 'edit'
     | 'alternate'
 
-export type EventStream<TData> = {
-    self: () => Promise<StreamResponse | void>
-    next: () => Promise<StreamResponse | void>
-    previous: () => Promise<StreamResponse | void>
-    first: () => Promise<StreamResponse | void>
-    last: () => Promise<StreamResponse | void>
-    metadata: () => Promise<StreamResponse | void>
-    entries: () => Promise<StreamEventResponse<TData>[]>
-    publish: (events: Array<Event<TData>>) => Promise<void>
-}
-
-export type StreamEntry = {
+export type StreamEntry<TEvent> = {
     title: string
     id: string
+    eventId: string
+    eventNumber: number
+    data: string
+    event: TEvent
+    isJson: boolean
+    isLinkMetadata: boolean
+    isMetadata: boolean
+    positionEventNumber: boolean
+    positionStreamId: string
+    streamId: string
     updated: string
     author: {
         name: string
@@ -55,18 +54,6 @@ export type StreamEntry = {
     links: StreamLink[]
 }
 
-export type StreamEventResponse<TData> =
-    StreamEntry
-    & {
-        content: {
-            eventStreamId: string
-            eventNumber: number
-            eventType: string
-            data: TData
-            metadata: string
-        }
-    }
-
 export type AtomLink = {
     uri: string
     relation: string
@@ -74,6 +61,20 @@ export type AtomLink = {
 
 export type AtomEntry<TEvent> = {
     id: string
+    eventId: string
+    eventNumber: number
+
+    /** Stringified representation of event */
+    data: string
+
+    event: TEvent
+
+    isJson: boolean
+    isLinkMetadata: boolean
+    isMetadata: boolean
+    positionEventNumber: number
+    positionStreamId: string
+    streamId: string
     title: string
     headOfStream: boolean
     links: AtomLink[]
@@ -84,25 +85,40 @@ export type AtomEntry<TEvent> = {
         name: string
     }
     summary: string
+
     ack: () => Promise<void>
     nack: () => Promise<void>
-    event: TEvent
 }
 
 export interface Atom<TEvent> {
     id: string
     title: string
     links: AtomLink[]
+    headOfStream: boolean
 
     /** ISO string */
     updated: string
+
     author: {
         name: string
     }
-    entries: AtomEntry<TEvent>[]
+
+    embed: AtomEmbed
+    count: number
+    atomUrl: string
+
+    entries: Array<AtomEntry<TEvent>>
 
     ackAll: () => Promise<void>
     nackAll: () => Promise<void>
-    previous: () => Promise<Atom<TEvent>>
-    self: () => Promise<Atom<TEvent>>
+    previous: (options?: AtomOptions) => Promise<Atom<TEvent>>
+    self: (options?: AtomOptions) => Promise<Atom<TEvent>>
 }
+
+export type AtomOptions = {
+  count?: number
+}
+
+export type AtomEmbed = 'None' | 'Content' | 'Rich' | 'Body' | 'PrettyBody' | 'TryHarder'
+
+export type AtomNack = 'Park' | 'Retry' | 'Skip' | 'Stop'
