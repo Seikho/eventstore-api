@@ -1,3 +1,32 @@
+export type CreateSubsciptionOptions = {
+    readRole: string
+    metaReadRole: string
+}
+
+export type EventStoreOptions = {
+    host: string
+    stream: string
+    createStream?: CreateSubsciptionOptions
+    credentials?: Credentials
+}
+
+export type SubscribeOptions = {
+    bufferSize?: number
+    checkPointAfterMilliseconds?: number
+    extraStatistics?: boolean
+    liveBufferSize?: number
+    maxCheckPointCount?: number
+    maxRetryCount?: number
+    maxSubscriberCount?: number
+    messageTimeoutMilliseconds?: number
+    minCheckPointCount?: number
+    namedConsumeStrategy?: 'RoundRobin' | 'Pinned' | 'DispatchToSingle'
+    readBatchSize?: number
+    resolveLinktos?: boolean
+    startFrom?: number
+}
+
+
 export type Event<TData> = {
     eventType: string
     data: TData
@@ -124,8 +153,8 @@ export type InternalAtomOptions = {
 }
 
 export type Credentials = {
-  user?: string
-  pass?: string
+    user?: string
+    pass?: string
 }
 
 export type AtomOptions = {

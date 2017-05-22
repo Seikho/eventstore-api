@@ -7,7 +7,10 @@ import {
   Relation,
   Event,
   StreamEntry,
-  Credentials
+  Credentials,
+  CreateSubsciptionOptions,
+  EventStoreOptions,
+  SubscribeOptions,
 } from './types'
 
 import {
@@ -18,34 +21,6 @@ import {
 } from './util'
 
 type StreamRequester<TEvent> = () => Promise<EventStream<TEvent>>
-
-type CreateOptions = {
-  readRole: string
-  metaReadRole: string
-}
-
-type ConstructorOptions = {
-  host: string
-  stream: string
-  createStream?: CreateOptions
-  credentials?: Credentials
-}
-
-type SubscribeOptions = {
-  bufferSize?: number
-  checkPointAfterMilliseconds?: number
-  extraStatistics?: boolean
-  liveBufferSize?: number
-  maxCheckPointCount?: number
-  maxRetryCount?: number
-  maxSubscriberCount?: number
-  messageTimeoutMilliseconds?: number
-  minCheckPointCount?: number
-  namedConsumeStrategy?: 'RoundRobin' | 'Pinned' | 'DispatchToSingle'
-  readBatchSize?: number
-  resolveLinktos?: boolean
-  startFrom?: number
-}
 
 export class EventStore<TData> {
   private stream: string
@@ -60,14 +35,14 @@ export class EventStore<TData> {
   last: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
   entries: Array<StreamEntry<TData>> = []
 
-  constructor(options: ConstructorOptions) {
+  constructor(options: EventStoreOptions) {
     this.host = normaliseUrl(options.host)
     this.stream = options.stream
     this.credentials = options.credentials || {}
   }
 
   // Every public request must be prefaced with thi
-  async init(options?: CreateOptions) {
+  async init(options?: CreateSubsciptionOptions) {
     if (this.initialised) {
       return
     }
@@ -84,7 +59,7 @@ export class EventStore<TData> {
     return response
   }
 
-  private async createStream(options: CreateOptions) {
+  private async createStream(options: CreateSubsciptionOptions) {
     const existingStream = await getStreamResponse(`${this.host}streams/${this.stream}`)
     if (existingStream) {
       return

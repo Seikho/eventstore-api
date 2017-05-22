@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Publication Event Source Emitter",
   "main": "src/index.js",
+  "typings": "src/index.ts",
   "scripts": {
     "test": "mocha",
     "start:example": "env-cmd .env node ./examples",
