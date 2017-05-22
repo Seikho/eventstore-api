@@ -6,7 +6,8 @@ import {
   EventStream,
   Relation,
   Event,
-  StreamEntry
+  StreamEntry,
+  Credentials
 } from './types'
 
 import {
@@ -21,11 +22,6 @@ type StreamRequester<TEvent> = () => Promise<EventStream<TEvent>>
 type CreateOptions = {
   readRole: string
   metaReadRole: string
-}
-
-type Credentials = {
-  user?: string
-  pass?: string
 }
 
 type ConstructorOptions = {
@@ -114,7 +110,13 @@ export class EventStore<TData> {
   subscribe = async (group: string, options: AtomOptions = {}) => {
     await this.init()
     const url = `${this.host}subscriptions/${this.stream}/${group}`
-    const response = await getAtom<TData>(url, options)
+    const response = await getAtom<TData>(url, {
+      host: this.host,
+      stream: this.stream,
+      credentials: this.credentials,
+      group,
+      ...options
+    })
     return response
   }
 

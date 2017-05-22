@@ -8,7 +8,8 @@
     "start:example": "env-cmd .env node ./examples",
     "start:migrate": "env-cmd .env node ./ingestor/migrate-db",
     "start:newsgate": "env-cmd .env node ./ingestor/newsgate",
-    "start:handler": "env-cmd .env node ./event-handler/sample"
+    "start:handler:ack": "env-cmd .env node ./event-handler/sample/ack",
+    "start:handler:replay": "env-cmd .env node ./event-handler/sample/replay"
   },
   "repository": {
     "type": "git",

@@ -111,12 +111,25 @@ export interface Atom<TEvent> {
 
     ackAll: () => Promise<void>
     nackAll: (action: AtomNackAction) => Promise<void>
-    previous: (options?: AtomOptions) => Promise<Atom<TEvent>>
-    self: (options?: AtomOptions) => Promise<Atom<TEvent>>
+    previous: (options?: InternalAtomOptions) => Promise<Atom<TEvent>>
+    self: (options?: InternalAtomOptions) => Promise<Atom<TEvent>>
+    replayParked: () => Promise<void>
+}
+
+export type InternalAtomOptions = {
+    host: string
+    stream: string
+    group: string
+    credentials: Credentials
+}
+
+export type Credentials = {
+  user?: string
+  pass?: string
 }
 
 export type AtomOptions = {
-  count?: number
+    count?: number
 }
 
 export type AtomEmbed = 'None' | 'Content' | 'Rich' | 'Body' | 'PrettyBody' | 'TryHarder'

@@ -4,8 +4,9 @@ import {
   Event,
   Atom,
   AtomLink,
+  InternalAtomOptions,
   AtomOptions,
-  AtomNackAction
+  AtomNackAction,
 } from './types'
 import * as uuid from 'uuid'
 
@@ -66,10 +67,14 @@ export async function writeToStream<TData>(host: string, stream: string, events:
 /**
  * TODO: Fix passing/handling options to things that care
  */
-export async function getAtom<TEvent>(url: string, options: AtomOptions = {}) {
+export async function getAtom<TEvent>(url: string, options: InternalAtomOptions & AtomOptions) {
   const count = options.count ? `/${options.count}` : ''
   const atomUrl = `${url}${count}?embed=TryHarder`
-  const response = await request<Atom<TEvent>>(atomUrl, jsonHeader)
+  const response = await request<Atom<TEvent>>(atomUrl, {
+    headers: {
+      'Accept': 'application/vnd.eventstore.competingatom+json'
+    }
+  })
 
   if (response.statusCode >= 400) {
     throw new Error(`Failed to retrieve subscription - Error Code: ${response.statusCode}`)
@@ -84,8 +89,14 @@ export async function getAtom<TEvent>(url: string, options: AtomOptions = {}) {
       return () => Promise.reject('No relation found in originating Atom')
     }
 
-    return async (options: AtomOptions = {}) => {
-      const atom = await getAtom(link.uri, options)
+    return async (atomOptions: InternalAtomOptions) => {
+      const atom = await getAtom(link.uri, {
+        host: options.host,
+        stream: options.stream,
+        group: options.group,
+        credentials: options.credentials,
+        ...atomOptions
+      })
       return atom
     }
   }
@@ -94,6 +105,7 @@ export async function getAtom<TEvent>(url: string, options: AtomOptions = {}) {
   atom.nackAll = toMsgAck('nackAll', atom.links)
   atom.previous = toAtom('previous')
   atom.self = toAtom('self')
+  atom.replayParked = () => replayParked(options)
 
   for (const entry of atom.entries) {
     entry.ack = toMsgAck('ack', entry.links)
@@ -126,8 +138,19 @@ function toMsgAck(rel: string, links: AtomLink[]) {
   }
 }
 
-const jsonHeader = {
-  headers: {
-    'Accept': 'application/vnd.eventstore.competingatom+json'
+async function replayParked(options: InternalAtomOptions) {
+  const replayUrl = `${options.host}subscriptions/${options.stream}/${options.group}/replayParked`
+  const response = await request<any>(replayUrl, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json'
+    },
+    auth: options.credentials
+  })
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    return
   }
+
+  throw new Error(`Failed to replay parked message -- Status code ${response.statusCode}`)
 }
