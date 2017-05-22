@@ -2,6 +2,7 @@ import * as PT from 'publication-types'
 import { processMany } from '../../command-handler'
 import db from './db'
 
+const initialOffset = 0
 const baseOffset = 250
 const query = db('Publication')
   .select()
@@ -9,16 +10,18 @@ const query = db('Publication')
   .limit(baseOffset)
 
 async function start() {
-  await publish()
+  publish()
 }
 
 async function publish(page: number = 0) {
   const offset = page * baseOffset
   const rows: PT.Schema.Publication[] = await query
     .clone()
-    .offset(offset)
+    .offset(offset + initialOffset)
 
   if (rows.length === 0) {
+    console.log('Finished')
+    process.exit(0)
     return
   }
 
@@ -51,9 +54,7 @@ async function publish(page: number = 0) {
 
   await processMany(commands)
   console.log(`Published ${rows.length} events`)
-  await publish(page + 1)
+  publish(page + 1)
 }
 
 start()
-  .then(() => process.exit(0))
-  .catch(() => process.exit(-1))
