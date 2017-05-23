@@ -36,11 +36,12 @@ async function publish(page: number = 0) {
     }
 
     const command: PublishContent = {
+      contentId: data.id,
       type: 'PublishContent',
       source: 'TheWest',
       tags: ['database', 'postgres'],
       original: {
-        type: 'json',
+        type: 'batcave+json',
         content: JSON.stringify(data)
       },
       content: data,

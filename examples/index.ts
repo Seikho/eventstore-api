@@ -13,8 +13,6 @@ const store = new EventStore({
 })
 
 export async function testRun() {
-
-  await store.init()
   const stream = await store.last()
   iterate(stream)
 }

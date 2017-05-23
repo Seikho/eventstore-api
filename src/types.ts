@@ -1,4 +1,4 @@
-export type CreateSubsciptionOptions = {
+export type StreamMetadataOptions = {
     readRole: string
     metaReadRole: string
 }
@@ -6,7 +6,6 @@ export type CreateSubsciptionOptions = {
 export type EventStoreOptions = {
     host: string
     stream: string
-    createStream?: CreateSubsciptionOptions
     credentials?: Credentials
 }
 
@@ -67,6 +66,7 @@ export type StreamEntry<TEvent> = {
     id: string
     eventId: string
     eventNumber: number
+    eventType: string
     data: string
     event: TEvent
     isJson: boolean

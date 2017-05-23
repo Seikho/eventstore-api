@@ -18,15 +18,20 @@ export function normaliseUrl(url: string) {
 }
 
 export async function getStreamResponse<TEvent>(uri: string): Promise<EventStream<TEvent>> {
-  const response = await request<EventStream<TEvent>>(`${uri}?embed=TryHarder`, {
+  const response = await request<EventStream<TEvent>>(`${uri}?embed=tryharder`, {
     headers: {
       'Accept': 'application/vnd.eventstore.atom+json'
     }
   })
 
+  if (response.statusCode >= 400) {
+    throw new Error(`Failed to retrieve stream -- Error code: ${response.statusCode}`)
+  }
+
   const stream = response.body
 
-  for (const entry of stream.entries) {
+  const entries = stream.entries || []
+  for (const entry of entries) {
     entry.event = JSON.parse(entry.data)
   }
 

@@ -7,7 +7,7 @@ dotenv.config({
   path: path.resolve(__dirname, '..', '..', '.env')
 })
 
-type SampleEvent = SWMEvent<any>
+type SampleEvent = ContentPublished<any>
 
 const store = new EventStore<SampleEvent>({
   host: process.env.JOURNAL_URL,

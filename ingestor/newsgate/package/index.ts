@@ -39,15 +39,18 @@ async function validatePackage(packageLocation: string): Promise<void> {
     throw new Error(`Article skipped: ${validationResult.skipReason}`)
   }
 
+  const content = ap.parsers.auto(source.xml).article
+
   return processOne(
     {
       type: 'PublishContent',
+      contentId: content.id,
       source: 'Newsgate',
       tags: [source.kind],
-      content: ap.parsers.auto(source.xml).article,
+      content,
       assets: source.images.map(i => ({ filename: i.name, location: '' })),
       original: {
-        type: 'xml',
+        type: 'newsgate+xml',
         content: source.xml
       }
     })

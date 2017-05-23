@@ -3,10 +3,15 @@ declare module 'xml2json' {
   export function toXml(object: {}): string
 }
 
+type SWMEvent<T> =
+  | ContentPublished<T>
+  | ContentKilled
+  | ContentRevived
+
 /**
  * A simple proposed event shape to begin negotiating
  */
-interface SWMEvent<TContent> {
+interface ContentPublished<TContent> {
   /**
    * The ingest source. E.g. Newsgate, Brightcove, NewsCorp, ...
    */
@@ -39,11 +44,24 @@ interface SWMEvent<TContent> {
   }
 }
 
+type ContentKilled = {
+  contentId: string
+  reason: string
+}
+
+type ContentRevived = {
+  contentId: string
+  reason: string
+}
+
 type Command =
   | PublishContent
+  | KillContent
+  | ReviveContent
 
 type PublishContent = {
   type: 'PublishContent',
+  contentId: string,
   source: string
   tags: string[]
   content: any
@@ -52,4 +70,16 @@ type PublishContent = {
     type: string
     content: string
   }
+}
+
+type KillContent = {
+  type: 'KillContent'
+  contentId: string
+  reason: string
+}
+
+type ReviveContent = {
+  type: 'ReviveContent',
+  contentId: string
+  reason: string
 }

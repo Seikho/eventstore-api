@@ -8,7 +8,7 @@ import {
   Event,
   StreamEntry,
   Credentials,
-  CreateSubsciptionOptions,
+  StreamMetadataOptions,
   EventStoreOptions,
   SubscribeOptions,
 } from './types'
@@ -25,10 +25,9 @@ type StreamRequester<TEvent> = () => Promise<EventStream<TEvent>>
 export class EventStore<TData> {
   private stream: string
   private host: string
-  private initialised = false
   private credentials: Credentials = {}
 
-  self: StreamRequester<TData>= () => Promise.reject('Store not yet initialised')
+  self: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
   next: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
   previous: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
   first: StreamRequester<TData> = () => Promise.reject('Store not yet initialised')
@@ -41,49 +40,33 @@ export class EventStore<TData> {
     this.credentials = options.credentials || {}
   }
 
-  // Every public request must be prefaced with thi
-  async init(options?: CreateSubsciptionOptions) {
-    if (this.initialised) {
+  async postStreamMetadata(options: StreamMetadataOptions) {
+    try {
+
+      // This will throw if the stream does not exist
+      await getStreamResponse(`${this.host}streams/${this.stream}`)
       return
+    } catch (ex) {
+      // TODO: Pass credentials through in request
+      const url = `${this.host}streams/${this.stream}/metadata`
+      const event = {
+        eventId: uuid.v4(),
+        eventType: '$user-updated',
+        data: options,
+      }
+
+      const response = await request(url,
+        {
+          body: JSON.stringify([event]),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/vnd.eventstore.events+json' },
+          auth: this.credentials
+        })
+      return response
     }
-
-    if (options) {
-      await this.createStream(options)
-    }
-
-    const url = `${this.host}streams/${this.stream}`
-    const response = await getStreamResponse<TData>(url)
-    this.entries = response.entries
-    this.updateRelations(response.links)
-    this.initialised = true
-    return response
-  }
-
-  private async createStream(options: CreateSubsciptionOptions) {
-    const existingStream = await getStreamResponse(`${this.host}streams/${this.stream}`)
-    if (existingStream) {
-      return
-    }
-
-    // TODO: Pass credentials through in request
-    const url = `${this.host}streams/${this.stream}/metadata`
-    const event = {
-      eventId: uuid.v4(),
-      eventType: '$user-updated',
-      data: options
-    }
-
-    const response = await request(url,
-      {
-        body: JSON.stringify([event]),
-        method: 'POST',
-        headers: { 'Content-Type': 'application/vnd.eventstore.events+json' }
-      })
-    return response
   }
 
   subscribe = async (group: string, options: AtomOptions = {}) => {
-    await this.init()
     const url = `${this.host}subscriptions/${this.stream}/${group}`
     const response = await getAtom<TData>(url, {
       host: this.host,
@@ -96,7 +79,6 @@ export class EventStore<TData> {
   }
 
   createSubscription = async (group: string, options: SubscribeOptions = {}) => {
-    await this.init()
     const url = `${this.host}subscriptions/${this.stream}/${group}`
     const requestOptions = {
       method: 'PUT',
@@ -118,7 +100,6 @@ export class EventStore<TData> {
   }
 
   publish = async (events: Array<Event<TData>>) => {
-    await this.init()
     return writeToStream(this.host, this.stream, events)
   }
 
@@ -127,9 +108,9 @@ export class EventStore<TData> {
    * to be relative to the new position
    */
   async forwardFrom(fromPosition: StreamPosition, amount: number = 20) {
-    await this.init()
     const url = `${this.host}streams/${this.stream}/${fromPosition}/forward/${amount}`
-    const response = await getStreamResponse(url)
+    const response = await getStreamResponse<TData>(url)
+    this.entries = response.entries
     this.updateRelations(response.links)
     return response
   }
@@ -139,9 +120,9 @@ export class EventStore<TData> {
    * to be relative to the new position
    */
   async backwardFrom(fromPosition: StreamPosition, amount: number = 20) {
-    await this.init()
-    const url = `${this.host}${this.stream}/${fromPosition}/backward/${amount}`
-    const response = await getStreamResponse(url)
+    const url = `${this.host}streams/${this.stream}/${fromPosition}/backward/${amount}`
+    const response = await getStreamResponse<TData>(url)
+    this.entries = response.entries
     this.updateRelations(response.links)
     return response
   }
@@ -163,7 +144,6 @@ export class EventStore<TData> {
      * We need to update the relation functions as we page through the entries
      */
     return async () => {
-      await this.init()
       const response = await getStreamResponse<TData>(relLink.uri)
       response.entries = response.entries.sort((left, right) => left.eventNumber - right.eventNumber)
 
