@@ -1166,9 +1166,9 @@ pseudomap@^1.0.1:
   version "1.0.2"
   resolved "https://nexus.swmdigital.io/repository/js-combined/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
 
-publication-types@1.2.1:
-  version "1.2.1"
-  resolved "https://nexus.swmdigital.io/repository/js-combined/publication-types/-/publication-types-1.2.1.tgz#83f490427119eac8ac8dc7a080fdf803a46c8e4f"
+publication-types@^3.1.0-rc-4:
+  version "3.1.0-rc-4"
+  resolved "https://nexus.swmdigital.io/repository/js-combined/publication-types/-/publication-types-3.1.0-rc-4.tgz#ab1518568b234179aa5c2f750afb2f4d806d9361"
 
 punycode@^1.4.1:
   version "1.4.1"
