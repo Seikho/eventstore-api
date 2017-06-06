@@ -1,7 +1,10 @@
 {
-  "name": "publication-events",
+  "name": "eventstore-api",
   "version": "0.1.0",
-  "description": "Publication Event Source Emitter",
+  "description": "EventStore HTTP API Consumer",
+  "publishConfig": {
+    "registry": "https://nexus.swmdigital.io/repository/js-private"
+  },
   "main": "src/index.js",
   "typings": "src/index.ts",
   "scripts": {
@@ -20,7 +23,6 @@
   "license": "MIT",
   "dependencies": {
     "request": "^2.81.0",
-    "typescript": "2.3",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
@@ -42,6 +44,7 @@
     "pg": "^6.1.5",
     "publication-types": "^3.1.0-rc-4",
     "swm-article-parser": "1.0.2",
-    "tslint": "^5.1.0"
+    "tslint": "^5.1.0",
+    "typescript": "^2.3.4"
   }
 }

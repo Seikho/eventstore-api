@@ -1484,9 +1484,9 @@ type-detect@^1.0.0:
   version "1.0.0"
   resolved "https://nexus.swmdigital.io/repository/js-combined/type-detect/-/type-detect-1.0.0.tgz#762217cc06db258ec48908a1298e8b95121e8ea2"
 
-typescript@2.3:
-  version "2.3.0"
-  resolved "https://nexus.swmdigital.io/repository/js-combined/typescript/-/typescript-2.3.0.tgz#2e63e09284392bc8158a2444c33e2093795c0418"
+typescript@^2.3.4:
+  version "2.3.4"
+  resolved "https://nexus.swmdigital.io/repository/js-combined/typescript/-/typescript-2.3.4.tgz#3d38321828231e434f287514959c37a82b629f42"
 
 uid-number@^0.0.6:
   version "0.0.6"
