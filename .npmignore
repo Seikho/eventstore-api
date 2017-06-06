@@ -1,0 +1,7 @@
+.vscode/
+command-handler/
+event-handler/
+examples/
+node_modules/
+test/
+ingestor/
