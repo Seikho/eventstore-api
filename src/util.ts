@@ -8,7 +8,8 @@ import {
   AtomOptions,
   AtomNackAction,
 } from './types'
-import * as uuid from 'uuid'
+
+const uuid = require('uuid')
 
 export function normaliseUrl(url: string) {
   const isSlash = url.slice(-1) === '/'

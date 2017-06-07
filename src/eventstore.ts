@@ -1,4 +1,3 @@
-import * as uuid from 'uuid'
 import request from './request'
 import {
   AtomOptions,
@@ -19,6 +18,8 @@ import {
   writeToStream,
   getAtom
 } from './util'
+
+const uuid = require('uuid')
 
 type StreamRequester<TEvent> = () => Promise<EventStream<TEvent>>
 

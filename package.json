@@ -2,48 +2,23 @@
   "name": "eventstore-api",
   "version": "0.1.1",
   "description": "EventStore HTTP API Consumer",
-  "publishConfig": {
-    "registry": "https://nexus.swmdigital.io/repository/js-private"
-  },
   "main": "src/index.js",
   "typings": "src/index.ts",
   "scripts": {
-    "test": "mocha",
-    "start:example": "env-cmd .env node ./examples",
-    "start:migrate": "env-cmd .env node ./ingestor/migrate-db",
-    "start:newsgate": "env-cmd .env node ./ingestor/newsgate",
-    "start:handler:ack": "env-cmd .env node ./event-handler/sample/ack",
-    "start:handler:replay": "env-cmd .env node ./event-handler/sample/replay"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.swmdigital.io/scm/bc/publication-events"
+    "url": "https://github.com/seikho/eventstore-api"
   },
   "author": "Carl Winkler",
   "license": "MIT",
   "dependencies": {
+    "@types/request": "^0.0.42",
     "request": "^2.81.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.4.31",
-    "@types/chai": "^3.5.1",
-    "@types/chokidar": "^1.6.0",
-    "@types/knex": "^0.0.46",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.13",
-    "@types/request": "^0.0.42",
-    "@types/uuid": "^2.0.29",
-    "adm-zip": "^0.4.7",
-    "chai": "^3.5.0",
-    "chokidar": "^1.6.1",
-    "dotenv": "^4.0.0",
-    "env-cmd": "^5.1.0",
-    "knex": "^0.12.9",
-    "mocha": "^3.2.0",
-    "pg": "^6.1.5",
-    "publication-types": "^3.1.0-rc-4",
-    "swm-article-parser": "1.0.2",
     "tslint": "^5.1.0",
     "typescript": "^2.3.4"
   }
